@@ -1,0 +1,46 @@
+# This file describes the network interfaces available on your system
+# and how to activate them. For more information, see interfaces(5).
+
+source /etc/network/interfaces.d/*
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+iface ens19 inet manual
+
+iface ens20 inet manual
+
+allow-hotplug ens18
+iface ens18 inet static
+	address 157.159.32.48/24
+	gateway 157.159.32.254
+	# dns-* options are implemented by the resolvconf package, if installed
+	dns-nameservers 157.159.40.54
+	dns-search hackademint.org
+
+auto ens21
+iface ens21 inet static
+	address 10.10.10.13
+	netmask 255.255.255.0
+	gateway 10.10.10.1
+
+
+auto br0
+iface br0 inet manual
+	bridge_ports tap0 ens19 ens20
+	post-up ip link set br0 type bridge vlan_filtering 1
+	# Permet de filter le trafic du vlan par défaut
+	post-up bridge vlan del dev br0   vid 1 self
+	post-up bridge vlan del dev tap0  vid 1 master
+	post-up bridge vlan del dev ens19 vid 1 master
+	post-up bridge vlan del dev ens20 vid 1 master
+	# On ajoute les nouveaux vlans
+	post-up bridge vlan add dev br0   vid 110 tagged self
+	post-up bridge vlan add dev br0   vid 120 tagged self
+	post-up bridge vlan add dev tap0  vid 110 tagged master
+	post-up bridge vlan add dev tap0  vid 120 tagged master
+	post-up bridge vlan add dev ens19 vid 120 pvid untagged master
+	post-up bridge vlan add dev ens20 vid 110 pvid untagged master
+
+

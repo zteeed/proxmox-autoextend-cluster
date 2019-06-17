@@ -11,3 +11,21 @@ function main() {
       cpu=$(ssh -i $PWD/keys/id_rsa -o BatchMode=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ConnectTimeout=2 $user@157.159.15.$i echo $(( $(lscpu | grep Proces | awk '{print $2}') * $(lscpu | grep Thread | cut -d':' -f2 | awk '{print $1}') )) )
   done
 }
+
+function select_ip() {
+  #all_ips=$(curl -s https://nmap2.priv.hackademint.org/ip | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}")
+  all_ips=$(pvecm status | grep -E -o "([0-9]{1,3}[\.]){3}[0-9]{1,3}")
+  for i  in {90..254}; do
+    t=1
+    for ip in $all_ips; do
+      if  [ "172.16.0.$i" == "$ip" ]; then
+        t=0
+      fi
+    done
+    if [ $t -eq 1 ]; then
+      result="172.16.0.$i"
+      return
+    fi
+  done
+  result="error"
+}

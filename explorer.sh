@@ -29,3 +29,15 @@ function select_ip() {
   done
   result="error"
 }
+
+
+function change_ip() {
+  if [ $# -ne 1 ]; then
+    echo "Usage: $0 <qcow_file>"
+    exit 0
+  fi
+  qcow_file=$1
+}
+
+select_ip result
+echo $?

@@ -56,6 +56,5 @@ qemu-system-x86_64 \
     -net nic -net bridge,br=virbr0  \
     -drive file=vm1.qcow2,if=ide,index=0,media=disk,format=qcow2 \
     -balloon virtio \
-    -vga cirrus \
-    #-nographic\
+    -nographic\
 ```

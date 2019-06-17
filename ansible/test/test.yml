@@ -1,0 +1,25 @@
+- hosts: [nodes]
+  remote_user: duboc_au
+  tasks:
+  - name: "get ram"
+    command: echo $(free | tail -n 2 | head -n 1 | awk '{print $2}')
+    register: ram
+  
+  - debug: 
+      var: ram
+
+  - name: "get cpu"
+    command: echo $(( $(lscpu | grep Proces | awk '{print $2}') * $(lscpu | grep Thread | cut -d':' -f2 | awk '{print $1}') )) )
+    register: cpu
+
+  - debug: 
+      var: cpu
+
+  - name: "copy qcow on remote serv"
+    copy:
+      src: ../vm1.qcow2
+      dest: ~
+
+  - name: "launch virtual machine"
+    command: qemu-system-x86_64 -cpu host -machine type=q35,accel=kvm -m {{ ram }} -smp {{ cpu }} -object rng-random,id=rng0,filename=/dev/urandom -device virtio-rng-pci,rng=rng0 -net nic -net bridge,br=virbr0 -drive file=vm1.qcow2,if=ide,index=0,media=disk,format=qcow2 -balloon virtio -vga cirrus
+

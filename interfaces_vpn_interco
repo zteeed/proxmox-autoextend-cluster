@@ -1,7 +1,18 @@
+# VID is the VLAN ID.
+# PVID is the port ID.
+#
+# If you set a PVID on a port any untagged packets will be assumed to be of that VID.
+#
+# An access port will have a PVID of the VLAN you expect to be on there by default.
+#
+# A trunk port won't have a PVID (well it'll have the default VID of 1), 
+# it will instead rely on the untagged VLANs and tagged VLANs parameter to 
+# determine what packets are allowed through.
+#
 # This file describes the network interfaces available on your system
 # and how to activate them. For more information, see interfaces(5).
-
-source /etc/network/interfaces.d/*
+#
+# source /etc/network/interfaces.d/*
 
 # The loopback network interface
 auto lo

@@ -1,3 +1,4 @@
+# /////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 # VID is the VLAN ID.
 # PVID is the port ID.
 #
@@ -8,6 +9,8 @@
 # A trunk port won't have a PVID (well it'll have the default VID of 1), 
 # it will instead rely on the untagged VLANs and tagged VLANs parameter to 
 # determine what packets are allowed through.
+#
+# /////////////////////////////\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 #
 # This file describes the network interfaces available on your system
 # and how to activate them. For more information, see interfaces(5).
@@ -36,21 +39,24 @@ iface ens21 inet static
 	netmask 255.255.255.0
 	gateway 10.10.10.1
 
-
 auto br0
 iface br0 inet manual
 	bridge_ports tap0 ens19 ens20
 	post-up ip link set br0 type bridge vlan_filtering 1
-	# Permet de filter le trafic du vlan par défaut
+	# Rejet du trafic du vlan par défaut :
+	# Pas de VLAN Tag => drop
 	post-up bridge vlan del dev br0   vid 1 self
 	post-up bridge vlan del dev tap0  vid 1 master
 	post-up bridge vlan del dev ens19 vid 1 master
 	post-up bridge vlan del dev ens20 vid 1 master
-	# On ajoute les nouveaux vlans
+	# On ajoute les nouveaux vlans autorisés au br0
 	post-up bridge vlan add dev br0   vid 110 tagged self
 	post-up bridge vlan add dev br0   vid 120 tagged self
+	# On ajoute les nouveaux vlans autorisés au tap0
 	post-up bridge vlan add dev tap0  vid 110 tagged master
 	post-up bridge vlan add dev tap0  vid 120 tagged master
+        # On configure les interfaces "de sorties" du br0, pour
+        # aiguiller le traffic.
 	post-up bridge vlan add dev ens19 vid 120 pvid untagged master
 	post-up bridge vlan add dev ens20 vid 110 pvid untagged master
 

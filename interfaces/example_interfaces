@@ -14,12 +14,6 @@ iface enp0s2 inet static
         gateway 192.168.122.1
         dns-nameserver 157.159.40.54
 
-auto tap0.110
-iface tap0.110 inet manual
-
-auto tap0.120
-iface tap0.120 inet manual
-
 auto vmbr0
 iface vmbr0 inet manual
         bridge_ports tap0.110

@@ -33,7 +33,7 @@ qemu-system-x86_64 \
 
 ### Premier démarrage de la VM modèle après l'installation
 
-Voici la commande à éxecuter pour le PREMIER démarrage. C'est une petite variante de la commande ci-dessus. Cela permet de voir les différentes options de QEMU. On a ajouté une lie option commençant par `-object rng-random` qui permettrait d'accélerer le démarrage de Debian en fournissant à la VM le générateur aléatoire de nombre de l'hôte (et donc pas d'émulation). On connecte aussi la VM sur le `virbr0` qui est le bridge par défaut mis en place sur les machines de la DISI. On supprime le disque d'installation. Attention à bien se connecter sur la machine de la DISI avec le X-forwarding!
+Voici la commande à éxecuter pour le **PREMIER démarrage**. C'est une petite variante de la commande ci-dessus. Cela permet de voir les différentes options de QEMU. On a ajouté une option commençant par `-object rng-random` qui permettrait d'accélerer le démarrage de Debian en fournissant à la VM le générateur aléatoire de nombre de l'hôte (et donc pas d'émulation). On connecte aussi la VM sur le `virbr0` qui est le bridge par défaut mis en place sur les machines de la DISI. On supprime le disque d'installation. Attention à bien se connecter sur la machine de la DISI avec le X-forwarding!
 
 ```bash
 #! /bin/sh
@@ -51,11 +51,11 @@ qemu-system-x86_64 \
 
 Une fois connectée, on effectue les manipulations suivantes :
 * on passe en root : `su`
-* on modifie le fichier `/etc/network/interfaces` pour renommer l'interface réseau (ce n'est pas la même qu'à l'installation, le nom a changé !) et on met la VM en IP statique. Le bridge est en `192.168.122.0/24`. Par convention, on prendre `192.168.122.2`.
+* on modifie le fichier `/etc/network/interfaces` pour renommer l'interface réseau (ce n'est pas la même qu'à l'installation, le nom a changé !) et on met la VM en IP statique. Le bridge est en `192.168.122.0/24`. Par convention, on prendre `192.168.122.2. **On n'ajoute PAS encore le vmbr120** (on le fera après).
 * on modifie `/etc/default/grub`pour activer la redirection console (et arrêter de faire un X-forwarding). Pour cela, il suffit de modifier la ligne avec `GRUB_CMDLINE_LINUX_DEFAULT` en y ajoutant `console=ttyS0 console=tty1`. Le premier `console` permet d'activer la sortie série. La seconde permet d'avoir la sortie de la VM dans la fenêtre qemu normalement. 
 * installation d'openvpn avec les identifiants générés sur le `vpn-interco`
 * on ajoute nos outils favoris (`vim`, `netcat`, ...)
-* [[ https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_Stretch | https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_Stretch ]]
+* [ On installe Proxmox en suivant ce tuto](https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_Stretch) 
 * on éteint la VM
 
 
@@ -71,7 +71,7 @@ qemu-img create -f qcow2 -b base.qcow2 vmX.qcow2
 
 où `X` est un nombre qui permet d'identifier la VM.
 
-Voici la nouvelle commande QEMU. Il faut adapter la RAM, le nombre de coeurs et le nom du disque de la VM. Nous demandons à QEMU de démarrer sur l'image dérivée et non sur l'image de base.
+Voici la nouvelle commande QEMU. **Il faut adapter la RAM, le nombre de coeurs et le nom du disque de la VM**. Nous demandons à QEMU de démarrer sur l'image dérivée et non sur l'image de base.
 
 ```bash
 #! /bin/sh
@@ -85,16 +85,17 @@ qemu-system-x86_64 \
     -balloon virtio \
     -nographic\
 ```
+### Ajout de la VM au cluster de Proxmox
 
 Une fois la VM démarrée, voici les instructions à exécuter pour ajouter notre nouveau noeud proxmox au cluster.
 * on passe en root : `su`
 * modification d'`/etc/network/interfaces` pour ajouter le `vmbr120` (voir le dossier interfaces pour un exemple, attention au choix de l'IP pour éviter tout conflit !)
-* ifup vmbr120
-* modification /etc/hostname : il faut changer le nom de la VM
-* modification /etc/hosts : mettre à jour le nom de la VM
-* modification /etc/mailname : mettre à jour le nom de la VM
-* modification /etc/postfix/main.cf : mettre à jour le nom de la VM (variable `myhostname=`)
-* modifier les noms des dossier/fichiers suivants (à faire pour les dossiers/fichiers nommés `node` et `storage` : `/var/lib/rrdcached/db/pve2-{node,storage}/old-hostname` en `/var/lib/rrdcached/db/pve2-{node,storage}/new-hostname`
+* `ifup vmbr120`
+* modification `/etc/hostname` : il faut changer le nom de la VM
+* modification `/etc/hosts` : mettre à jour le nom de la VM
+* modification `/etc/mailname` : mettre à jour le nom de la VM
+* modification `/etc/postfix/main.cf` : mettre à jour le nom de la VM (variable `myhostname=`)
+* modifier les noms des dossier/fichiers suivants (à faire pour les dossiers/fichiers nommés `node` **et** `storage` : `/var/lib/rrdcached/db/pve2-{node,storage}/old-hostname` en `/var/lib/rrdcached/db/pve2-{node,storage}/new-hostname`
 * reboot de la VM (pour appliquer tous les changements précédents)
 * une fois redémarré, on passe en root : `su`
 * on ajoute la VM au cluster : `pvecm add X.X.X.X` où `X.X.X.X` correspond à une IP d'un serveur déjà dans le cluster. Dès lors, on nous demande le mot de passe root de ce serveur. Une fois entré, le serveur est ajouté au cluster :D

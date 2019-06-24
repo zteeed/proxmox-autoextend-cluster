@@ -1,0 +1,24 @@
+- hosts: [nodes]
+  remote_user: duboc_au
+  tasks:
+  - set_fact: ip_remote={{ hostvars[inventory_hostname]['ansible_default_ipv4']['address']  }}
+  - name: "get ram"
+    shell:  echo $(( $(free -m | tail -n 2 | head -n 1 | awk '{print $2}') / 2 ))
+    register: ram
+  - name: "get cpu"
+    shell: echo $(( $(lscpu | grep Proces | awk '{print $2}') * $(lscpu | grep Thread | cut -d':' -f2 | awk '{print $1}') ))
+    register: cpu
+  - set_fact: name=vm{{ ip_remote.split(".")[3] }}.qcow2
+  - set_fact: path=/mci/ei1720/duboc_au/vms/{{ name }}
+  - set_fact: ramint={{ ram.stdout | int}}
+  - set_fact: cpuint={{ cpu.stdout | int }}
+  - debug: var=path
+  - debug: var=ram
+  - debug: var=cpu
+  - name: "launch virtual machine"
+    command: >
+                    screen -dm bash -c "qemu-system-x86_64 -cpu host -machine type=q35,accel=kvm -m {{ ramint }}
+                    -smp {{ cpuint }} -object rng-random,id=rng0,filename=/dev/urandom 
+                    -device virtio-rng-pci,rng=rng0 -net nic -net bridge,br=virbr0 
+                    -drive file={{ path }},if=ide,index=0,media=disk,format=qcow2 
+                    -balloon virtio -nographic; exec /bin/bash"

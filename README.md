@@ -10,7 +10,12 @@ Déployer des VMs sur toutes les machines du 157.159.0.0/16 sur lesquels on peut
 
 [https://data.priv.hackademint.org](https://data.priv.hackademint.org)
 
-### Créer des VMs
+### Création d'une VM modèle
+
+Cette commande permet de lancer une machine virtuelle avec l'accélération KVM, une mémoire de 16G de RAM et 2 coeurs. La VM va booter directement sur l'iso. Ici, on a utilisé
+une netinstall (il faut adapter le nom bien sûr !). Les options `-nic` permettent d'avoir internet : QEMU va créer un sous-réseau et un serveur DHCP, ainsi il n'y a besoin de 
+rien configurer pour l'installation. Cependant, on modifiera cette option après pour configurer la machine en IP statique. Pour finir, l'option `-vga cirrus` permet
+d'avoir une fenêtre graphique. On modifiera ceci aussi après pour avoir une sortie en console dans un `screen`.
 
 ```bash
 #! /bin/sh
@@ -19,16 +24,16 @@ qemu-system-x86_64 \
     -enable-kvm \
     -m 16384 -smp 2 \
     -boot d \
-    -drive file=vm1.qcow2,if=ide,index=0,media=disk,format=qcow2 \
+    -drive file=base.qcow2,if=ide,index=0,media=disk,format=qcow2 \
     -drive file=debian-9.9.0-amd64-netinst.iso,index=1,media=cdrom \
     -net nic \
-           -net user \
+    -net user \
     -vga cirrus -balloon virtio \
 ```
 
-### Démarrer la VM
+### Premier démarrage de la VM modèle après l'installation
 
-Une première version du script consiste à démarrer la VM (attention à bien se connecter sur la machine de la DISI avec le X-forwarding!)
+Voici la commande à éxecuter pour le PREMIER démarrage. C'est une petite variante de la commande ci-dessus. Cela permet de voir les différentes options de QEMU. On a ajouté une lie option commençant par `-object rng-random` qui permettrait d'accélerer le démarrage de Debian en fournissant à la VM le générateur aléatoire de nombre de l'hôte (et donc pas d'émulation). On connecte aussi la VM sur le `virbr0` qui est le bridge par défaut mis en place sur les machines de la DISI. On supprime le disque d'installation. Attention à bien se connecter sur la machine de la DISI avec le X-forwarding!
 
 ```bash
 #! /bin/sh
@@ -38,23 +43,60 @@ qemu-system-x86_64 \
     -m 8192 -smp 2 \
     -object rng-random,id=rng0,filename=/dev/urandom -device virtio-rng-pci,rng=rng0 \
     -net nic -net bridge,br=virbr0  \
-    -drive file=vm1.qcow2,if=ide,index=0,media=disk,format=qcow2 \
+    -drive file=base.qcow2,if=ide,index=0,media=disk,format=qcow2 \
     -balloon virtio \
     -vga cirrus \
     #-nographic\
 ```
 
-La deuxième version est la suivante : pour éviter de faire un X-forwarding ET aussi pouvoir lancer la VM dans un screen, il suffit d'ajouter dans `/etc/default/grub`dans les commandes de `GRUB_CMDLINE_LINUX_DEFAULT` : `console=ttyS0 console=ttyS1`. Le premier console permet d'activer la sortie série. La seconde permet d'avoir la sortie de la VM dans la fenêtre qemu normalement. Pour utiliser la sortie sérial, il faut l'option `-nographic` de qemu, d'où la variante :
+Une fois connectée, on effectue les manipulations suivantes :
+* on passe en root : `su`
+* on modifie le fichier `/etc/network/interfaces` pour renommer l'interface réseau (ce n'est pas la même qu'à l'installation, le nom a changé !) et on met la VM en IP statique. Le bridge est en `192.168.122.0/24`. Par convention, on prendre `192.168.122.2`.
+* on modifie `/etc/default/grub`pour activer la redirection console (et arrêter de faire un X-forwarding). Pour cela, il suffit de modifier la ligne avec `GRUB_CMDLINE_LINUX_DEFAULT` en y ajoutant `console=ttyS0 console=tty1`. Le premier `console` permet d'activer la sortie série. La seconde permet d'avoir la sortie de la VM dans la fenêtre qemu normalement. 
+* installation d'openvpn avec les identifiants générés sur le `vpn-interco`
+* on ajoute nos outils favoris (`vim`, `netcat`, ...)
+* [[ https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_Stretch | https://pve.proxmox.com/wiki/Install_Proxmox_VE_on_Debian_Stretch ]]
+* on éteint la VM
+
+
+### Création des VMs à partir du modèle de base 
+
+Nous allons créer des images disques basés sur l'image modèle. Nous utilisons la possibilité de faire des snapshots de l'image de base. Ainsi, nous allons créer une nouvelle image disque qui ne contiendra uniquement les différences par rapport à l'image de base. En d'autres termes, nous allons créer des images `vmX.qcow2` basé sur l'image `base.qcow2`. Les images `vmX.qcow2` ne feront que quelques Mo et contiendront uniquement les modifications/différences par rapport à l'image de base. Il existe des commandes pour faire un "merge" des différences avec l'image de base, mais ce n'est pas le but de la manoeuvre aujourd'hui :-)
+
+Création de l'image `vmX.qcow2` basé sur `base.qcow2` :
+
+```bash
+qemu-img create -f qcow2 -b base.qcow2 vmX.qcow2
+```
+
+où `X` est un nombre qui permet d'identifier la VM.
+
+Voici la nouvelle commande QEMU. Il faut adapter la RAM, le nombre de coeurs et le nom du disque de la VM. Nous demandons à QEMU de démarrer sur l'image dérivée et non sur l'image de base.
 
 ```bash
 #! /bin/sh
 qemu-system-x86_64 \
     -cpu host \
     -machine type=q35,accel=kvm \
-    -m 8192 -smp 2 \
+    -m RAM -smp NB_COEUR \
     -object rng-random,id=rng0,filename=/dev/urandom -device virtio-rng-pci,rng=rng0 \
     -net nic -net bridge,br=virbr0  \
-    -drive file=vm1.qcow2,if=ide,index=0,media=disk,format=qcow2 \
+    -drive file=vmX.qcow2,if=ide,index=0,media=disk,format=qcow2 \
     -balloon virtio \
     -nographic\
 ```
+
+Une fois la VM démarrée, voici les instructions à exécuter pour ajouter notre nouveau noeud proxmox au cluster.
+* on passe en root : `su`
+* modification d'`/etc/network/interfaces` pour ajouter le `vmbr120` (voir le dossier interfaces pour un exemple, attention au choix de l'IP pour éviter tout conflit !)
+* ifup vmbr120
+* modification /etc/hostname : il faut changer le nom de la VM
+* modification /etc/hosts : mettre à jour le nom de la VM
+* modification /etc/mailname : mettre à jour le nom de la VM
+* modification /etc/postfix/main.cf : mettre à jour le nom de la VM (variable `myhostname=`)
+* modifier les noms des dossier/fichiers suivants (à faire pour les dossiers/fichiers nommés `node` et `storage` : `/var/lib/rrdcached/db/pve2-{node,storage}/old-hostname` en `/var/lib/rrdcached/db/pve2-{node,storage}/new-hostname`
+* reboot de la VM (pour appliquer tous les changements précédents)
+* une fois redémarré, on passe en root : `su`
+* on ajoute la VM au cluster : `pvecm add X.X.X.X` où `X.X.X.X` correspond à une IP d'un serveur déjà dans le cluster. Dès lors, on nous demande le mot de passe root de ce serveur. Une fois entré, le serveur est ajouté au cluster :D
+ 
+Au final, `vmX.qcow2` fera environ 25Mo.

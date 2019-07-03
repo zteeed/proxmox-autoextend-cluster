@@ -12,9 +12,10 @@
   - set_fact: path=/mci/ei1720/duboc_au/vms/{{ name }}
   - set_fact: ramint={{ ram.stdout | int}}
   - set_fact: cpuint={{ cpu.stdout | int }}
+  - debug: var=name
   - debug: var=path
-  - debug: var=ram
-  - debug: var=cpu
+  - debug: var=ramint
+  - debug: var=cpuint
   - name: "launch virtual machine"
     command: >
                     screen -dm bash -c "qemu-system-x86_64 -cpu host -machine type=q35,accel=kvm -m {{ ramint }}

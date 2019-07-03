@@ -101,3 +101,8 @@ Une fois la VM démarrée, voici les instructions à exécuter pour ajouter notr
 * on ajoute la VM au cluster : `pvecm add X.X.X.X` où `X.X.X.X` correspond à une IP d'un serveur déjà dans le cluster. Dès lors, on nous demande le mot de passe root de ce serveur. Une fois entré, le serveur est ajouté au cluster :D
  
 Au final, `vmX.qcow2` fera environ 25Mo.
+
+## Tutorials
+
+- [ansible-ssh-setup-playbook](https://www.hashbangcode.com/article/ansible-ssh-setup-playbook)
+- [ansible-pipeline](https://stackoverflow.com/questions/48385059/does-ansible-create-a-separate-ssh-connection-for-each-tasks-inside-a-playbook)

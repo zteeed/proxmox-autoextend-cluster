@@ -11,4 +11,6 @@ function main() {
   done
 }
 
+./interrupt.sh &
 main
+pkill interrupt.sh

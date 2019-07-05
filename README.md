@@ -102,6 +102,35 @@ Une fois la VM démarrée, voici les instructions à exécuter pour ajouter notr
  
 Au final, `vmX.qcow2` fera environ 25Mo.
 
+### Déploiement de containers sur les nouveaux noeuds
+
+## Nouveau stockage
+Pour éviter de consommer de la place inutilement sur les PCs de la DISI, ainsi que pour faire de la HA (High Avaibility), nous utilisons un Network File System (NFS).
+Concrètement, il s'agit d'un protcole permettant de monter un dossier à distance. Ce protocole marche aussi bien avec Linux que Windows.
+
+Notre NFS se trouve sur Cody-Maverick (serveur de dév.). Le dossier NFS monté en réseau se trouve à la racine de cody : `/nfs`. Ils possèdent deux disques durs de 750Go en Raid 1, ce qui assure un minimum la pérennité des disques des machines virtuelles.
+Ainsi, lorsque nous souhaitons utiliser un container sur une machine de la DISI et/ou faire de la HA, nous créons ce container comme nous le ferions habituellement et nous spécifions
+d'enregistrer le disque du container sur le NFS au lieu d'un stockage en local.
+
+## High Avaibility
+
+# Introduction
+
+Nous utilisons des machines des salles B et D pour étendre notre cluster. Ce sont des machines de TPs qui peuvent être utilisés par d'autres étudiants. Elles peuvent donc s'éteindre à n'importe quelle moment de la journée. En cas de coupure d'une machine de TP qui était dans notre cluster, pour éviter de perdre notre container jusqu'à un nouvel allumage de cette dernière,
+aucun disque de container n'est sauvegardé sur les machines de la DISI. Ainsi, on ne risque pas de perdre nos données. Cependant, on aimerait bien redéployer le container qui a été sauvagement coupé. Nous utilisons alors une fonctionnalité de Proxmox qui est la **High Avaibility**.
+
+Prenons un exemple pour le cas d'un container sous HA : on dit au cluster Proxmox de surveiller l'état de container. Si pour une raison X ou Y le noeud où se trouve le container meurt tragiquement dans d'atroces souffrances, le cluster va remarquer que le container sur le noeud n'est donc plus fonctionnel. Il s'écoule généralement un petit temps avant que le cluster "prenne une décision" (en effet, peut être une petite déconnexion ? Il vaut mieux attendre et ça va revenir tout seul... ou pas :-( ). Le cluster peut alors décider de migrer le container sur un autre noeud et après de rallumer le container. Comment est-ce possible si le noeud où le container était se trouve éteint ?
+
+Au préalable, on a spécifié à Proxmox de surveiller ce container. On a aussi spécifié où est-ce qu'il fallait redéployer le container en cas de défaillance (on peut spécifier une préférence selon les noeuds aussi). Les autres noeuds contiennent une copie du fichier de configuration du container, et comme le disque se trouve sur Cody (qui tourne toujours), nous n'avons donc pas de problème !
+
+# Mise en pratique et documentation
+En pratique, c'est un petit peu plus compliqué. Lorsque nous avons parlé du fait que le "cluster prend une décision", on parle de **quorum**. Proxmox utilise `Corosync` pour faire de la haute disponibilité. Si jamais il y a un problème, il vaut mieux chercher du côté de `Corosync`! Si jamais un container est bloqué pendant une migration, il faut regarder si Corosync ou d'autres services liés à la HA sont bien lancés.
+
+Pour le coup, l'interface Web permet de faire exactement la même chose qu'en ligne de commande.
+
+La haute disponibilité n'est pas compliquée à comprendre en soi. Cepedant, il y a toute une théorie derrière (c'est un métier). 
+Voici de la littérature concernant [la haute disponibilité sur Proxmox](https://pve.proxmox.com/wiki/High_Availability).
+
 ## Tutorials
 
 - [ansible-ssh-setup-playbook](https://www.hashbangcode.com/article/ansible-ssh-setup-playbook)

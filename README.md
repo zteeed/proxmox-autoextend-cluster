@@ -105,12 +105,20 @@ Au final, `vmX.qcow2` fera environ 25Mo.
 ### Déploiement de containers sur les nouveaux noeuds
 
 ## Nouveau stockage
+
+# Introduction
 Pour éviter de consommer de la place inutilement sur les PCs de la DISI, ainsi que pour faire de la HA (High Avaibility), nous utilisons un Network File System (NFS).
 Concrètement, il s'agit d'un protcole permettant de monter un dossier à distance. Ce protocole marche aussi bien avec Linux que Windows.
 
 Notre NFS se trouve sur Cody-Maverick (serveur de dév.). Le dossier NFS monté en réseau se trouve à la racine de cody : `/nfs`. Ils possèdent deux disques durs de 750Go en Raid 1, ce qui assure un minimum la pérennité des disques des machines virtuelles.
 Ainsi, lorsque nous souhaitons utiliser un container sur une machine de la DISI et/ou faire de la HA, nous créons ce container comme nous le ferions habituellement et nous spécifions
 d'enregistrer le disque du container sur le NFS au lieu d'un stockage en local.
+
+# Mise en place
+L'installation est très rapide, voir [le tuto](https://www.howtoforge.com/tutorial/install-nfs-server-and-client-on-debian/). On retiendra qu'il faut :
+  * éditer `/etc/exports` pour spécifier quel dossier on souhaite partager sur le réseau
+  * relancer le serveur NFS pour appliquer la configuration `sudo service nfs-kernel-server reload`. D'après la documentation Ubuntu française, relancer le serveur NFS ne coupe pas les transferts en cours (sauf s'il y a restriction d'accès avec la nouvelle configuration appliquée).
+  * utiliser `showmount -e` pour voir les exports en cours.
 
 ## High Avaibility
 

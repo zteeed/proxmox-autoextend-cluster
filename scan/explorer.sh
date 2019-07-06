@@ -1,7 +1,7 @@
 function main() {
   user="duboc_au"
   gateway="ssh.imtbs-tsp.eu"
-  echo '' > ./result.txt
+  echo -n '' > ./result.txt
   for i in {2..254}; do
       result=$(dig -x 157.159.15.$i +nocomments +noquestion +noauthority +noadditional +nostats | grep PTR | awk '{print $5}')
       if [ -z $result ]; then continue; fi # if result is None

@@ -42,5 +42,8 @@ sed -i "s|proxmox-vm|$new_hostname|g" /etc/mailname /etc/postfix/main.cf
 mv /var/lib/rrdcached/db/pve2-node/{proxmox-vm,$new_hostname}
 mv /var/lib/rrdcached/db/pve2-storage/{proxmox-vm,$new_hostname}
 
+# update sshd config to permit root login (pvecm add issue)
+sed -i "s|#PermitRootLogin prohibit-password|PermitRootLogin yes|g" /etc/ssh/sshd_config
+
 # yes my lord ! More work ? Alright...
 reboot

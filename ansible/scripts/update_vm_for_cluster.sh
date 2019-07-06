@@ -30,17 +30,20 @@ EOF
 echo "$new_hostname is rebooting... please wait... [ 10 seconds ]"
 sleep 10 
 
-# create and upload script in the VM to add it in the cluster
+# create and upload script in the VM to add it in the cluster + going back to old version of sshd config
 cat << EOF > ./pvecm_script.sh
 #!/bin/sh
 pvecm add --use_ssh=true 172.16.0.1
+sleep 5
+sed -i "s|PermitRootLogin yes|#PermitRootLogin prohibit-password|g" /etc/ssh/sshd_config
+/etc/init.d/ssh restart
 EOF
-sshpass -p hackademint scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "./pvecm_script.sh" moog@192.168.122.2:~/
+sshpass -p hackademint scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no "./pvecm_script.sh" root@192.168.122.2:~/
 
 # execute it
-sshpass -p hackademint ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no moog@192.168.122.2 << EOF
+sshpass -p hackademint ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no root@192.168.122.2 << EOF
 chmod 755 ./pvecm_script.sh
-(sleep 1; echo hackademint) | socat - EXEC:"su -c ./pvecm_script.sh",pty
+./pvecm_script.sh
 EOF
 
 # now our should be in the cluster, well done :)

@@ -1,3 +1,4 @@
+*.retry
 keys/*
 test/*
 ip.txt

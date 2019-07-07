@@ -1,8 +1,10 @@
 #!/bin/bash
 # n=$(pvecm status | grep -Eo '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | tail -n 1 | cut -d'.' -f4)
-if [ ! -f "./num.txt" ]; then
-  ./reset.sh
+path=$(dirname "${BASH_SOURCE[0]}")
+file="$path/num.txt"
+if [ ! -f $file ]; then
+  $path/reset.sh
 fi
-n=$(head -n 1 ./num.txt)
+n=$(head -n 1 $file)
 echo "172.16.0.$n"
-echo "$(( $n + 1))" > ./num.txt
+echo "$(( $n + 1))" > $file

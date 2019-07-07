@@ -1,5 +1,3 @@
 *.retry
 keys/*
-test/*
 ip.txt
-todo.txt

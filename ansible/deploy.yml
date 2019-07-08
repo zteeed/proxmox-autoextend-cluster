@@ -28,11 +28,12 @@
         seconds: 30
         prompt: "Waiting 30 seconds while the virtual machine is booting"
   - name: "copy scripts on remote host"
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    owner: "{{ remote_user }}"
-    group: "{{ remote_user }}"
-    mode: 0755
+    copy:
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      owner: "{{ ansible_ssh_user }}"
+      group: "{{ group }}"
+      mode: 0755
     with_items:
       - { src: './scripts/update_config_vm.sh', dest: '~/vms/update_config_vm.sh' }
       - { src: './scripts/update_vm_for_cluster.sh', dest: '~/vms/update_vm_for_cluster.sh' }

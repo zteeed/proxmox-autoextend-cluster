@@ -1,6 +1,7 @@
 - hosts: [nodes]
   remote_user: duboc_au
   tasks:
+  - set_fact: group=ei1720
   - set_fact: ip_remote={{ hostvars[inventory_hostname]['ansible_default_ipv4']['address']  }}
   - name: "get ram"
     shell:  echo $(( 4 * $(free -m | tail -n 2 | head -n 1 | awk '{print $2}') / 5 ))

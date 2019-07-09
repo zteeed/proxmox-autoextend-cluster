@@ -10,10 +10,12 @@
     shell: echo $(( $(lscpu | grep Proces | awk '{print $2}') * $(lscpu | grep Thread | cut -d':' -f2 | awk '{print $1}') ))
     register: cpu
   - set_fact: name=vm{{ ip_remote.split(".")[3] }}.qcow2
+  - set_fact: folder=/mci/ei1720/duboc_au/vms
   - set_fact: path=/mci/ei1720/duboc_au/vms/{{ name }}
   - set_fact: ramint={{ ram.stdout | int}}
   - set_fact: cpuint={{ cpu.stdout | int }}
   - debug: var=name
+  - debug: var=folder
   - debug: var=path
   - debug: var=ramint
   - debug: var=cpuint
@@ -35,15 +37,15 @@
       group: "{{ group }}"
       mode: 0755
     with_items:
-      - { src: './scripts/update_config_vm.sh', dest: '~/vms/update_config_vm.sh' }
-      - { src: './scripts/update_vm_for_cluster.sh', dest: '~/vms/update_vm_for_cluster.sh' }
+      - { src: './scripts/update_config_vm.sh', dest: '{{ folder }}/update_config_vm.sh' }
+      - { src: './scripts/update_vm_for_cluster.sh', dest: '{{ folder }}/update_vm_for_cluster.sh' }
   - set_fact: new_hostname=disicoptere{{ ip_remote.split(".")[3] }}
   - name: "choosing a free ip in vmbr120"
     local_action: command ./scripts/new_ip/get_new_ip.sh
     register: output_new_ip
   - set_fact: new_ip={{ output_new_ip.stdout }}
   - name: "execute scripts to add the new VM in the cluster" 
-    script: ~/vms/update_vm_for_cluster.sh {{ new_hostname }} {{ new_ip }}
+    script: "{{ folder }}/update_vm_for_cluster.sh {{ new_hostname }} {{ new_ip }}"
   - pause:
       minutes: 1
       prompt: "Waiting 60 seconds while the script is executing + rebooting the VM"

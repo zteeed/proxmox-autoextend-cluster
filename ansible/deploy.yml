@@ -54,9 +54,6 @@
   - name: "execute scripts to add the new VM in the cluster" 
     command: "bash {{ folder }}/update_vm_for_cluster.sh {{ new_hostname }} {{ new_ip }}"
     ignore_errors: True
-  - pause:
-      minutes: 2
-      prompt: "Waiting 60 seconds while the script is executing + rebooting the VM"
   - debug:
       msg:
         - "Well done ! {{ new_hostname }} --> {{ new_ip }} in the cluster !"

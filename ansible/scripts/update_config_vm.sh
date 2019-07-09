@@ -1,13 +1,5 @@
 #!/bin/sh
 
-# this script needs to be run as root
-#if [ $EUID -ne 0 ]; then
-#        exit 1
-#fi
-
-# bypass the host checking on the node that will add this vm to the cluster via pvecm
-sed -i 's|#   StrictHostKeyChecking ask|    StrictHostKeyChecking no|g' /etc/ssh/ssh_config
-
 # update ip for vmbr120 (bridge for HackademINT VLAN)
 new_ip=$(cat ./config* | tail -n 1)
 cat << EOF >> /etc/network/interfaces
@@ -39,11 +31,8 @@ ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters
 EOF
 sed -i "s|proxmox-vm|$new_hostname|g" /etc/mailname /etc/postfix/main.cf
-mv /var/lib/rrdcached/db/pve2-node/{proxmox-vm,$new_hostname}
-mv /var/lib/rrdcached/db/pve2-storage/{proxmox-vm,$new_hostname}
-
-# update sshd config to permit root login (pvecm add issue)
-sed -i "s|#PermitRootLogin prohibit-password|PermitRootLogin yes|g" /etc/ssh/sshd_config
+mv "/var/lib/rrdcached/db/pve2-node/{proxmox-vm,$new_hostname}"
+mv "/var/lib/rrdcached/db/pve2-storage/{proxmox-vm,$new_hostname}"
 
 # yes my lord ! More work ? Alright...
 reboot

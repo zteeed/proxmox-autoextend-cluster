@@ -45,7 +45,7 @@
     register: output_new_ip
   - set_fact: new_ip={{ output_new_ip.stdout }}
   - name: "execute scripts to add the new VM in the cluster" 
-    script: "{{ folder }}/update_vm_for_cluster.sh {{ new_hostname }} {{ new_ip }}"
+    command: "bash {{ folder }}/update_vm_for_cluster.sh {{ new_hostname }} {{ new_ip }}"
   - pause:
       minutes: 1
       prompt: "Waiting 60 seconds while the script is executing + rebooting the VM"

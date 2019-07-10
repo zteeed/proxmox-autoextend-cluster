@@ -1,0 +1,12 @@
+- hosts: [nodes]
+  remote_user: duboc_au
+  tasks:
+  - set_fact: group=ei1720
+  - set_fact: ip_remote={{ hostvars[inventory_hostname]['ansible_default_ipv4']['address']  }}
+  - set_fact: new_hostname_part=disicoptere{{ ip_remote.split(".")[3] }}
+  - name: "execute scripts to add the new VM in the cluster" 
+    command: "bash ./root/pvecm_script*"
+    ignore_errors: True
+  - debug:
+      msg:
+        - "Well done ! {{ new_hostname_part }} in the cluster !"

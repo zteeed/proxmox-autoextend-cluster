@@ -4,7 +4,6 @@
 new_ip=$(cat ./config* | tail -n 1)
 cat << EOF >> /etc/network/interfaces
 
-# HackademINT VLAN
 auto vmbr120
 iface vmbr120 inet static
         address $new_ip/24
@@ -12,10 +11,11 @@ iface vmbr120 inet static
         bridge_ports tap0.120
         bridge_stp off
         bridge_fd 0
+# HackademINT VLAN : 172.16.0.0/24
 EOF
 
 # raise up the interface
-ifup vmbr120
+#ifup vmbr120
 
 # update some system vars
 new_hostname=$(cat ./config* | head -n 1)
@@ -31,8 +31,8 @@ ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters
 EOF
 sed -i "s|proxmox-vm|$new_hostname|g" /etc/mailname /etc/postfix/main.cf
-mv "/var/lib/rrdcached/db/pve2-node/{proxmox-vm,$new_hostname}"
-mv "/var/lib/rrdcached/db/pve2-storage/{proxmox-vm,$new_hostname}"
+mv /var/lib/rrdcached/db/pve2-node/proxmox-vm /var/lib/rrdcached/db/pve2-node/$new_hostname
+mv /var/lib/rrdcached/db/pve2-storage/proxmox-vm /var/lib/rrdcached/db/pve2-storage/$new_hostname
 
 # yes my lord ! More work ? Alright...
 reboot

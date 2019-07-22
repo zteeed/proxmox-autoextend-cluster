@@ -1,0 +1,9 @@
+- hosts: [nodes]
+  remote_user: duboc_au
+  tasks:
+  - name: "pkill qemu"
+    shell:  pkill qemu 
+    ignore_errors: True
+  - name: "pkill screen"
+    shell:  pkill screen 
+    ignore_errors: True

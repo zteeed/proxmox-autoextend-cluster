@@ -38,7 +38,7 @@ EOF
 echo "$new_hostname is rebooting... please wait... [ 30 seconds ]"
 sleep 30 
 
-k=$(expr $(echo $new_ip|cut -d . -f4) - 89)
+k=$(expr $(echo $new_ip|cut -d . -f4) - 101)
 time_to_sleep=$(expr $k \* 20)
 # create and upload script in the VM to add it in the cluster + going back to old version of ssh and sshd config
 cat << EOF > $path/pvecm_script$num.sh
